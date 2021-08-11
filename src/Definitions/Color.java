@@ -36,6 +36,20 @@ public class Color {
 		this.g = (rgb >> 8) & 0xFF;
 		this.b = rgb & 0xFF;
 	}
+	
+	public int getRGB() {
+		int rgb = this.r;
+		rgb = (rgb << 8) + this.g;
+		rgb = (rgb << 8) + this.b;
+		return rgb;
+	}
+	
+	public boolean equals(Color c) {
+		if(this.r == c.r && this.g == c.g && this.b == c.b) {
+			return true;
+		}
+		return false;
+	}
 
 	public int getR() {
 		return r;

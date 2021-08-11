@@ -23,8 +23,24 @@ public class Workspace {
 
 		BufferedImage img = null;
 		try {
-			img = ImageIO.read(new File(IMAGES_FOLDER + "chrome-red.jpg"));
+			img = ImageIO.read(new File(IMAGES_FOLDER + "mona.jpg"));
 			Color avgColor = cu.getAverageColor(img);
+			ArrayList<String> descs = cu.getColorDesc(avgColor);
+			ArrayList<Color> defColors = cu.defaultColorGroups(img, true);
+			System.out.println("\nDescriptions: ");
+			for(String s : descs) {
+				System.out.println(s);
+			}
+			if(defColors.size() == 1) {
+				System.out.println("Monochromatic");
+			}
+			if(defColors.size() == 2) {
+				System.out.println("Dichromatic");
+			}
+			if(defColors.size() == 3) {
+				System.out.println("Trichromatic");
+			}
+			System.out.println();
 			if (avgColor != null) {
 				updateHTMLColor(avgColor);
 				System.out.println(avgColor.getName() + ": RGB(" + avgColor.getR() + ", " + avgColor.getG() + ", "
@@ -38,6 +54,12 @@ public class Workspace {
 					Color avgColor2 = cg.getGroupAverage();
 					System.out.println(avgColor2.getName() + ": RGB(" + avgColor2.getR() + ", " + avgColor2.getG() + ", "
 							+ avgColor2.getB() + ")");
+				}
+				cu.createGroupOnlyImage(cgs, img);
+				System.out.println();
+				System.out.println("Color scheme:");
+				for(Color c : defColors) {
+					System.out.println(c.getName());
 				}
 			}
 		} catch (IOException e) {

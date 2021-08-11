@@ -1,9 +1,13 @@
 package Util;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
 
 import Definitions.Color;
 import Definitions.ColorGroup;
@@ -164,14 +168,122 @@ public class ColorUtil {
 					}
 				}
 			}
-			if (colorGroups.size() < 16) {
-				//double sdg = standardDeviationGroup(colorGroups, bi);
+			if (colorGroups.size() < 32) {
+				// double sdg = standardDeviationGroup(colorGroups, bi);
 				done = true;
 			}
-			diffThreshold *= 2;
+			diffThreshold *= 1.25;
 		}
 
 		return colorGroups;
 	}
 
+	public void createGroupOnlyImage(ArrayList<ColorGroup> cgs, BufferedImage bi) {
+		BufferedImage newImage = new BufferedImage(bi.getWidth(), bi.getHeight(), 1);
+
+		int w = bi.getWidth();
+		int h = bi.getHeight();
+
+		for (int i = 0; i < w; i++) {
+			for (int j = 0; j < h; j++) {
+				Color pixel = new Color(bi.getRGB(i, j));
+				double minDev = 999.0;
+				ColorGroup closestMatch = null;
+				for (ColorGroup cg : cgs) {
+					double currDist = colorDistance(pixel, cg.getGroupAverage());
+					if (currDist < minDev) {
+						minDev = currDist;
+						closestMatch = cg;
+					}
+				}
+				newImage.setRGB(i, j, closestMatch.getGroupAverage().getRGB());
+			}
+		}
+		File outputfile = new File("groupOnly.jpg");
+		try {
+			ImageIO.write(newImage, "jpg", outputfile);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
+		}
+	}
+
+	public ArrayList<String> getColorDesc(Color c) {
+
+		ArrayList<String> descs = new ArrayList<String>();
+
+		int avgVal = (c.getR() + c.getG() + c.getB()) / 3;
+
+		if (c.getR() > 200 && c.getG() > 200 && c.getB() > 200) {
+			descs.add("Light");
+		}
+		if (c.getR() < 75 && c.getG() < 75 && c.getB() < 75) {
+			descs.add("Dark");
+		}
+		if (avgVal > 190 && avgVal < 215) {
+			descs.add("Pastel");
+		}
+		if (c.getB() < 100 && c.getG() > 100 && c.getG() < 150 && c.getR() > 100 && c.getR() < 150) {
+			descs.add("Earthy");
+		}
+		if (c.getR() > 70 && c.getR() < 180 && c.getG() > 70 && c.getG() < 180 && c.getB() > 70 && c.getB() < 180) {
+			descs.add("Natural");
+		}
+
+		return descs;
+
+	}
+
+	public ArrayList<Color> defaultColorGroups(BufferedImage bi, boolean createDefGroupOnly) {
+
+		BufferedImage newImage = new BufferedImage(bi.getWidth(), bi.getHeight(), 1);
+
+		Color[] defColors = new Color[] { new Color(255, 0, 0), new Color(255, 255, 0), new Color(0, 255, 255),
+				new Color(255, 0, 255), new Color(255, 128, 0), new Color(128, 255, 0), new Color(0, 255, 128),
+				new Color(0, 255, 255), new Color(0, 128, 255), new Color(128, 0, 255), new Color(255, 0, 255),
+				new Color(255, 0, 128) };
+
+		ArrayList<Color> closestColors = new ArrayList<Color>();
+
+		int w = bi.getWidth();
+		int h = bi.getHeight();
+
+		for (int i = 0; i < w; i++) {
+			for (int j = 0; j < h; j++) {
+				Color pixel = new Color(bi.getRGB(i, j));
+				double minDev = 999.0;
+				Color closestMatch = null;
+				for (int k = 0; k < defColors.length; k++) {
+					double currDist = colorDistance(pixel, defColors[k]);
+					if (currDist < minDev) {
+						minDev = currDist;
+						closestMatch = defColors[k];
+					}
+				}
+				if (createDefGroupOnly)
+					newImage.setRGB(i, j, closestMatch.getRGB());
+				if (closestColors.size() == 0) {
+					closestColors.add(closestMatch);
+				}
+				boolean found = false;
+				for (Color co : closestColors) {
+					if (co.equals(closestMatch)) {
+						found = true;
+					}
+				}
+				if (!found)
+					closestColors.add(closestMatch);
+			}
+		}
+		if (createDefGroupOnly) {
+			File outputfile = new File("defGroupOnly.jpg");
+			try {
+				ImageIO.write(newImage, "jpg", outputfile);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println(e.getMessage());
+			}
+		}
+		return closestColors;
+	}
 }
